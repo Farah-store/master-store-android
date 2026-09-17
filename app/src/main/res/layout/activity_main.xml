@@ -2,42 +2,53 @@
 
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/background"
+    android:background="#F5F7F5"
     android:layoutDirection="rtl">
 
     <!-- Header -->
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="65dp"
+        android:layout_height="64dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="18dp"
-        android:paddingEnd="18dp"
-        android:background="@color/primary">
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:background="#16A34A">
+
+        <ImageButton
+            android:id="@+id/menuButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@android:color/transparent"
+            android:src="@android:drawable/ic_menu_sort_by_size"
+            android:contentDescription="القائمة" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/app_name"
-            android:textColor="@android:color/white"
+            android:text="Master Store"
+            android:textColor="#FFFFFF"
             android:textSize="22sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:gravity="center" />
 
-        <TextView
-            android:id="@+id/cartIcon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🛒"
-            android:textSize="27sp" />
+        <ImageButton
+            android:id="@+id/cartButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@android:color/transparent"
+            android:src="@android:drawable/ic_menu_add"
+            android:contentDescription="السلة" />
 
     </LinearLayout>
 
-    <!-- Main Content -->
+    <!-- Content -->
 
     <ScrollView
         android:layout_width="match_parent"
@@ -49,34 +60,87 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:padding="16dp">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="25dp"
-                android:gravity="center"
                 android:text="مرحباً بك في Master Store"
-                android:textColor="@color/text_primary"
-                android:textSize="26sp"
-                android:textStyle="bold" />
+                android:textSize="25sp"
+                android:textStyle="bold"
+                android:textColor="#172017"
+                android:layout_marginTop="10dp" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:gravity="center"
-                android:text="متجرك الإلكتروني بسهولة وسرعة"
-                android:textColor="@color/text_secondary"
-                android:textSize="16sp" />
+                android:text="كل احتياجاتك الرقمية في مكان واحد"
+                android:textSize="15sp"
+                android:textColor="#687368"
+                android:layout_marginTop="6dp" />
 
-            <Button
-                android:id="@+id/productsButton"
+            <EditText
+                android:id="@+id/searchBox"
                 android:layout_width="match_parent"
-                android:layout_height="55dp"
-                android:layout_marginTop="35dp"
-                android:text="🛍️ تصفح المنتجات"
-                android:textSize="16sp" />
+                android:layout_height="52dp"
+                android:hint="🔎  ابحث عن منتج..."
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:layout_marginTop="20dp"
+                android:background="@android:drawable/editbox_background" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="الأقسام"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="#172017"
+                android:layout_marginTop="26dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="90dp"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="10dp">
+
+                <Button
+                    android:layout_width="0dp"
+                    android:layout_height="70dp"
+                    android:layout_weight="1"
+                    android:text="🎮\nألعاب" />
+
+                <Button
+                    android:layout_width="0dp"
+                    android:layout_height="70dp"
+                    android:layout_weight="1"
+                    android:text="📱\nشحن" />
+
+                <Button
+                    android:layout_width="0dp"
+                    android:layout_height="70dp"
+                    android:layout_weight="1"
+                    android:text="💳\nبطاقات" />
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="المنتجات"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="#172017"
+                android:layout_marginTop="20dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="180dp"
+                android:gravity="center"
+                android:text="سيتم تحميل المنتجات من WooCommerce"
+                android:textColor="#687368"
+                android:textSize="15sp" />
 
         </LinearLayout>
 
@@ -89,39 +153,39 @@
         android:layout_height="70dp"
         android:orientation="horizontal"
         android:gravity="center"
-        android:background="@android:color/white">
+        android:background="#FFFFFF">
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="🏠&#10;الرئيسية"
-            android:textSize="13sp" />
+            android:text="🏠\nالرئيسية"
+            android:textSize="12sp" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="🛒&#10;السلة"
-            android:textSize="13sp" />
+            android:text="🛒\nالسلة"
+            android:textSize="12sp" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="👤&#10;حسابي"
-            android:textSize="13sp" />
+            android:text="👤\nحسابي"
+            android:textSize="12sp" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="☰&#10;القائمة"
-            android:textSize="13sp" />
+            android:text="ℹ️\nمن نحن"
+            android:textSize="12sp" />
 
     </LinearLayout>
 
