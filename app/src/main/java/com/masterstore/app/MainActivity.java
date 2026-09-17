@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -41,6 +42,9 @@ public class MainActivity extends AppCompatActivity {
     private static final String CART_URL =
             "https://master4store.com/wp-json/wc/store/v1/cart";
 
+    private static final String ADD_TO_CART_URL =
+            "https://master4store.com/wp-json/wc/store/v1/cart/add-item";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,6 +57,10 @@ public class MainActivity extends AppCompatActivity {
         loadProducts();
         getCartToken();
     }
+
+    // =========================================================
+    // تحميل المنتجات
+    // =========================================================
 
     private void loadProducts() {
 
@@ -106,7 +114,8 @@ public class MainActivity extends AppCompatActivity {
 
                 try {
 
-                    JSONArray products = new JSONArray(json);
+                    JSONArray products =
+                            new JSONArray(json);
 
                     runOnUiThread(() -> {
 
@@ -132,6 +141,10 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    // =========================================================
+    // الحصول على Cart Token
+    // =========================================================
+
     private void getCartToken() {
 
         Request request = new Request.Builder()
@@ -142,7 +155,10 @@ public class MainActivity extends AppCompatActivity {
         client.newCall(request).enqueue(new Callback() {
 
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(
+                    Call call,
+                    IOException e
+            ) {
 
                 runOnUiThread(() ->
                         Toast.makeText(
@@ -154,12 +170,16 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onResponse(Call call, Response response)
-                    throws IOException {
+            public void onResponse(
+                    Call call,
+                    Response response
+            ) throws IOException {
 
-                String token = response.header("Cart-Token");
+                String token =
+                        response.header("Cart-Token");
 
-                if (token != null && !token.isEmpty()) {
+                if (token != null
+                        && !token.isEmpty()) {
 
                     cartToken = token;
 
@@ -185,25 +205,48 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void displayProducts(JSONArray products) {
+    // =========================================================
+    // عرض المنتجات
+    // =========================================================
+
+    private void displayProducts(
+            JSONArray products
+    ) {
 
         productsContainer.removeAllViews();
 
         if (products.length() == 0) {
 
-            TextView empty = new TextView(this);
+            TextView empty =
+                    new TextView(this);
 
-            empty.setText("لا توجد منتجات حالياً");
+            empty.setText(
+                    "لا توجد منتجات حالياً"
+            );
+
             empty.setTextSize(17);
-            empty.setGravity(Gravity.CENTER);
-            empty.setPadding(20, 40, 20, 40);
 
-            productsContainer.addView(empty);
+            empty.setGravity(
+                    Gravity.CENTER
+            );
+
+            empty.setPadding(
+                    20,
+                    40,
+                    20,
+                    40
+            );
+
+            productsContainer.addView(
+                    empty
+            );
 
             return;
         }
 
-        for (int i = 0; i < products.length(); i++) {
+        for (int i = 0;
+             i < products.length();
+             i++) {
 
             try {
 
@@ -211,7 +254,10 @@ public class MainActivity extends AppCompatActivity {
                         products.getJSONObject(i);
 
                 int productId =
-                        product.optInt("id", 0);
+                        product.optInt(
+                                "id",
+                                0
+                        );
 
                 String name =
                         product.optString(
@@ -220,7 +266,9 @@ public class MainActivity extends AppCompatActivity {
                         );
 
                 JSONObject prices =
-                        product.optJSONObject("prices");
+                        product.optJSONObject(
+                                "prices"
+                        );
 
                 String price = "";
 
@@ -239,9 +287,11 @@ public class MainActivity extends AppCompatActivity {
                             );
 
                     price =
-                            formatPrice(rawPrice)
-                                    + " "
-                                    + symbol;
+                            formatPrice(
+                                    rawPrice
+                            )
+                            + " "
+                            + symbol;
                 }
 
                 boolean inStock =
@@ -253,7 +303,9 @@ public class MainActivity extends AppCompatActivity {
                 String imageUrl = "";
 
                 JSONArray images =
-                        product.optJSONArray("images");
+                        product.optJSONArray(
+                                "images"
+                        );
 
                 if (images != null
                         && images.length() > 0) {
@@ -280,6 +332,10 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+    // =========================================================
+    // بطاقة المنتج
+    // =========================================================
 
     private void addProductCard(
             int productId,
@@ -320,7 +376,13 @@ public class MainActivity extends AppCompatActivity {
                 18
         );
 
-        card.setLayoutParams(cardParams);
+        card.setLayoutParams(
+                cardParams
+        );
+
+        // =====================================================
+        // صورة المنتج
+        // =====================================================
 
         ImageView productImage =
                 new ImageView(this);
@@ -349,17 +411,26 @@ public class MainActivity extends AppCompatActivity {
                     .into(productImage);
         }
 
-        card.addView(productImage);
+        card.addView(
+                productImage
+        );
+
+        // =====================================================
+        // اسم المنتج
+        // =====================================================
 
         TextView nameText =
                 new TextView(this);
 
         nameText.setText(name);
+
         nameText.setTextSize(18);
+
         nameText.setTypeface(
                 Typeface.DEFAULT,
                 Typeface.BOLD
         );
+
         nameText.setTextColor(
                 0xFF172017
         );
@@ -377,19 +448,30 @@ public class MainActivity extends AppCompatActivity {
                 0
         );
 
-        nameText.setLayoutParams(nameParams);
+        nameText.setLayoutParams(
+                nameParams
+        );
 
-        card.addView(nameText);
+        card.addView(
+                nameText
+        );
+
+        // =====================================================
+        // السعر
+        // =====================================================
 
         TextView priceText =
                 new TextView(this);
 
         priceText.setText(price);
+
         priceText.setTextSize(17);
+
         priceText.setTypeface(
                 Typeface.DEFAULT,
                 Typeface.BOLD
         );
+
         priceText.setTextColor(
                 0xFF16A34A
         );
@@ -407,25 +489,49 @@ public class MainActivity extends AppCompatActivity {
                 8
         );
 
-        priceText.setLayoutParams(priceParams);
+        priceText.setLayoutParams(
+                priceParams
+        );
 
-        card.addView(priceText);
+        card.addView(
+                priceText
+        );
+
+        // =====================================================
+        // حالة المخزون
+        // =====================================================
 
         TextView stockText =
                 new TextView(this);
 
         if (inStock) {
 
-            stockText.setText("● متوفر");
-            stockText.setTextColor(0xFF16A34A);
+            stockText.setText(
+                    "● متوفر"
+            );
+
+            stockText.setTextColor(
+                    0xFF16A34A
+            );
 
         } else {
 
-            stockText.setText("● غير متوفر");
-            stockText.setTextColor(0xFFCC0000);
+            stockText.setText(
+                    "● غير متوفر"
+            );
+
+            stockText.setTextColor(
+                    0xFFCC0000
+            );
         }
 
-        card.addView(stockText);
+        card.addView(
+                stockText
+        );
+
+        // =====================================================
+        // زر إضافة إلى السلة
+        // =====================================================
 
         Button cartButton =
                 new Button(this);
@@ -439,11 +545,27 @@ public class MainActivity extends AppCompatActivity {
         );
 
         cartButton.setOnClickListener(
-                v -> Toast.makeText(
-                        MainActivity.this,
-                        "سيتم ربط السلة في المرحلة القادمة",
-                        Toast.LENGTH_SHORT
-                ).show()
+                v -> {
+
+                    if (cartToken == null
+                            || cartToken.isEmpty()) {
+
+                        Toast.makeText(
+                                MainActivity.this,
+                                "السلة غير جاهزة، حاول مرة أخرى",
+                                Toast.LENGTH_SHORT
+                        ).show();
+
+                        getCartToken();
+
+                        return;
+                    }
+
+                    addToCart(
+                            productId,
+                            cartButton
+                    );
+                }
         );
 
         LinearLayout.LayoutParams buttonParams =
@@ -463,19 +585,236 @@ public class MainActivity extends AppCompatActivity {
                 buttonParams
         );
 
-        card.addView(cartButton);
+        card.addView(
+                cartButton
+        );
 
-        productsContainer.addView(card);
+        productsContainer.addView(
+                card
+        );
     }
 
-    private String formatPrice(String value) {
+    // =========================================================
+    // إضافة المنتج إلى WooCommerce
+    // =========================================================
+
+    private void addToCart(
+            int productId,
+            Button cartButton
+    ) {
+
+        if (cartToken == null
+                || cartToken.isEmpty()) {
+
+            Toast.makeText(
+                    MainActivity.this,
+                    "السلة غير جاهزة",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            return;
+        }
+
+        cartButton.setEnabled(false);
+
+        cartButton.setText(
+                "جاري الإضافة..."
+        );
+
+        HttpUrl url =
+                HttpUrl.parse(
+                        ADD_TO_CART_URL
+                );
+
+        if (url == null) {
+
+            cartButton.setEnabled(true);
+
+            cartButton.setText(
+                    "🛒 إضافة إلى السلة"
+            );
+
+            Toast.makeText(
+                    MainActivity.this,
+                    "رابط السلة غير صحيح",
+                    Toast.LENGTH_LONG
+            ).show();
+
+            return;
+        }
+
+        HttpUrl finalUrl =
+                url.newBuilder()
+                        .addQueryParameter(
+                                "id",
+                                String.valueOf(
+                                        productId
+                                )
+                        )
+                        .addQueryParameter(
+                                "quantity",
+                                "1"
+                        )
+                        .build();
+
+        Request request =
+                new Request.Builder()
+                        .url(finalUrl)
+                        .header(
+                                "Cart-Token",
+                                cartToken
+                        )
+                        .post(
+                                okhttp3.RequestBody.create(
+                                        null,
+                                        new byte[0]
+                                )
+                        )
+                        .build();
+
+        client.newCall(request).enqueue(
+                new Callback() {
+
+                    @Override
+                    public void onFailure(
+                            Call call,
+                            IOException e
+                    ) {
+
+                        runOnUiThread(() -> {
+
+                            cartButton.setEnabled(
+                                    true
+                            );
+
+                            cartButton.setText(
+                                    "🛒 إضافة إلى السلة"
+                            );
+
+                            Toast.makeText(
+                                    MainActivity.this,
+                                    "تعذر الاتصال بالسلة",
+                                    Toast.LENGTH_LONG
+                            ).show();
+                        });
+                    }
+
+                    @Override
+                    public void onResponse(
+                            Call call,
+                            Response response
+                    ) throws IOException {
+
+                        String responseBody =
+                                response.body() != null
+                                        ? response.body().string()
+                                        : "";
+
+                        if (response.isSuccessful()) {
+
+                            runOnUiThread(() -> {
+
+                                cartButton.setEnabled(
+                                        true
+                                );
+
+                                cartButton.setText(
+                                        "✓ تمت الإضافة للسلة"
+                                );
+
+                                Toast.makeText(
+                                        MainActivity.this,
+                                        "تمت إضافة المنتج إلى السلة ✓",
+                                        Toast.LENGTH_SHORT
+                                ).show();
+                            });
+
+                        } else {
+
+                            String errorMessage =
+                                    getWooCommerceError(
+                                            responseBody
+                                    );
+
+                            runOnUiThread(() -> {
+
+                                cartButton.setEnabled(
+                                        true
+                                );
+
+                                cartButton.setText(
+                                        "🛒 إضافة إلى السلة"
+                                );
+
+                                Toast.makeText(
+                                        MainActivity.this,
+                                        errorMessage,
+                                        Toast.LENGTH_LONG
+                                ).show();
+                            });
+                        }
+                    }
+                }
+        );
+    }
+
+    // =========================================================
+    // قراءة خطأ WooCommerce
+    // =========================================================
+
+    private String getWooCommerceError(
+            String json
+    ) {
+
+        try {
+
+            JSONObject error =
+                    new JSONObject(json);
+
+            String message =
+                    error.optString(
+                            "message",
+                            ""
+                    );
+
+            if (!message.isEmpty()) {
+                return message;
+            }
+
+            String code =
+                    error.optString(
+                            "code",
+                            ""
+                    );
+
+            if (!code.isEmpty()) {
+                return "خطأ WooCommerce: "
+                        + code;
+            }
+
+        } catch (Exception ignored) {
+        }
+
+        return "تعذر إضافة المنتج إلى السلة";
+    }
+
+    // =========================================================
+    // تنسيق السعر
+    // =========================================================
+
+    private String formatPrice(
+            String value
+    ) {
 
         try {
 
             double number =
-                    Double.parseDouble(value);
+                    Double.parseDouble(
+                            value
+                    );
 
-            if (number == Math.floor(number)) {
+            if (number ==
+                    Math.floor(number)) {
 
                 return String.valueOf(
                         (long) number
@@ -492,4 +831,4 @@ public class MainActivity extends AppCompatActivity {
             return value;
         }
     }
-}
+                                  }
