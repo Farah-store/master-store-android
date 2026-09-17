@@ -13,6 +13,8 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -146,12 +148,14 @@ public class MainActivity extends AppCompatActivity {
 
             try {
 
-                JSONObject product = products.getJSONObject(i);
+                JSONObject product =
+                        products.getJSONObject(i);
 
-                String name = product.optString(
-                        "name",
-                        "منتج"
-                );
+                String name =
+                        product.optString(
+                                "name",
+                                "منتج"
+                        );
 
                 JSONObject prices =
                         product.optJSONObject("prices");
@@ -161,7 +165,10 @@ public class MainActivity extends AppCompatActivity {
                 if (prices != null) {
 
                     String rawPrice =
-                            prices.optString("price", "");
+                            prices.optString(
+                                    "price",
+                                    ""
+                            );
 
                     String symbol =
                             prices.optString(
@@ -169,9 +176,10 @@ public class MainActivity extends AppCompatActivity {
                                     ""
                             );
 
-                    price = formatPrice(rawPrice)
-                            + " "
-                            + symbol;
+                    price =
+                            formatPrice(rawPrice)
+                                    + " "
+                                    + symbol;
                 }
 
                 boolean inStock =
@@ -180,9 +188,28 @@ public class MainActivity extends AppCompatActivity {
                                 true
                         );
 
+                String imageUrl = "";
+
+                JSONArray images =
+                        product.optJSONArray("images");
+
+                if (images != null
+                        && images.length() > 0) {
+
+                    JSONObject image =
+                            images.getJSONObject(0);
+
+                    imageUrl =
+                            image.optString(
+                                    "src",
+                                    ""
+                            );
+                }
+
                 addProductCard(
                         name,
                         price,
+                        imageUrl,
                         inStock
                 );
 
@@ -194,6 +221,7 @@ public class MainActivity extends AppCompatActivity {
     private void addProductCard(
             String name,
             String price,
+            String imageUrl,
             boolean inStock
     ) {
 
@@ -205,10 +233,10 @@ public class MainActivity extends AppCompatActivity {
         );
 
         card.setPadding(
-                20,
-                20,
-                20,
-                20
+                16,
+                16,
+                16,
+                16
         );
 
         card.setBackgroundColor(
@@ -230,6 +258,35 @@ public class MainActivity extends AppCompatActivity {
 
         card.setLayoutParams(cardParams);
 
+        ImageView productImage =
+                new ImageView(this);
+
+        productImage.setLayoutParams(
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        220
+                )
+        );
+
+        productImage.setScaleType(
+                ImageView.ScaleType.CENTER_CROP
+        );
+
+        if (!imageUrl.isEmpty()) {
+
+            Glide.with(this)
+                    .load(imageUrl)
+                    .placeholder(
+                            android.R.drawable.ic_menu_gallery
+                    )
+                    .error(
+                            android.R.drawable.ic_menu_gallery
+                    )
+                    .into(productImage);
+        }
+
+        card.addView(productImage);
+
         TextView nameText =
                 new TextView(this);
 
@@ -243,6 +300,21 @@ public class MainActivity extends AppCompatActivity {
                 0xFF172017
         );
 
+        LinearLayout.LayoutParams nameParams =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                );
+
+        nameParams.setMargins(
+                0,
+                14,
+                0,
+                0
+        );
+
+        nameText.setLayoutParams(nameParams);
+
         card.addView(nameText);
 
         TextView priceText =
@@ -250,6 +322,10 @@ public class MainActivity extends AppCompatActivity {
 
         priceText.setText(price);
         priceText.setTextSize(17);
+        priceText.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.BOLD
+        );
         priceText.setTextColor(
                 0xFF16A34A
         );
@@ -262,9 +338,9 @@ public class MainActivity extends AppCompatActivity {
 
         priceParams.setMargins(
                 0,
-                10,
+                8,
                 0,
-                10
+                8
         );
 
         priceText.setLayoutParams(priceParams);
@@ -276,23 +352,13 @@ public class MainActivity extends AppCompatActivity {
 
         if (inStock) {
 
-            stockText.setText(
-                    "متوفر"
-            );
-
-            stockText.setTextColor(
-                    0xFF16A34A
-            );
+            stockText.setText("● متوفر");
+            stockText.setTextColor(0xFF16A34A);
 
         } else {
 
-            stockText.setText(
-                    "غير متوفر"
-            );
-
-            stockText.setTextColor(
-                    0xFFCC0000
-            );
+            stockText.setText("● غير متوفر");
+            stockText.setTextColor(0xFFCC0000);
         }
 
         card.addView(stockText);
@@ -301,7 +367,7 @@ public class MainActivity extends AppCompatActivity {
                 new Button(this);
 
         cartButton.setText(
-                "إضافة إلى السلة"
+                "🛒 إضافة إلى السلة"
         );
 
         cartButton.setEnabled(
@@ -311,7 +377,7 @@ public class MainActivity extends AppCompatActivity {
         cartButton.setOnClickListener(
                 v -> Toast.makeText(
                         MainActivity.this,
-                        "سيتم إضافة المنتج للسلة",
+                        "سيتم ربط السلة في المرحلة القادمة",
                         Toast.LENGTH_SHORT
                 ).show()
         );
