@@ -1,5 +1,6 @@
 package com.masterstore.app;
 
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -8,6 +9,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,7 +24,6 @@ import java.io.IOException;
 
 import okhttp3.Call;
 import okhttp3.Callback;
-import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -31,10 +32,10 @@ public class MainActivity extends AppCompatActivity {
 
     private final OkHttpClient client = new OkHttpClient();
 
-    private String cartToken = null;
-
     private LinearLayout productsContainer;
     private ProgressBar loadingBar;
+
+    private String cartToken = "";
 
     private static final String PRODUCTS_URL =
             "https://master4store.com/wp-json/wc/store/v1/products?per_page=20";
@@ -49,13 +50,45 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_main);
+        try {
 
-        productsContainer = findViewById(R.id.productsContainer);
-        loadingBar = findViewById(R.id.loadingBar);
+            setContentView(R.layout.activity_main);
 
-        loadProducts();
-        getCartToken();
+            productsContainer =
+                    findViewById(R.id.productsContainer);
+
+            loadingBar =
+                    findViewById(R.id.loadingBar);
+
+            if (productsContainer == null) {
+                Toast.makeText(
+                        this,
+                        "خطأ: productsContainer غير موجود",
+                        Toast.LENGTH_LONG
+                ).show();
+                return;
+            }
+
+            if (loadingBar == null) {
+                Toast.makeText(
+                        this,
+                        "خطأ: loadingBar غير موجود",
+                        Toast.LENGTH_LONG
+                ).show();
+                return;
+            }
+
+            loadProducts();
+            getCartToken();
+
+        } catch (Exception e) {
+
+            Toast.makeText(
+                    this,
+                    "حدث خطأ أثناء تشغيل التطبيق",
+                    Toast.LENGTH_LONG
+            ).show();
+        }
     }
 
     // =========================================================
@@ -64,7 +97,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadProducts() {
 
-        loadingBar.setVisibility(View.VISIBLE);
+        if (loadingBar != null) {
+            loadingBar.setVisibility(View.VISIBLE);
+        }
 
         Request request = new Request.Builder()
                 .url(PRODUCTS_URL)
@@ -74,11 +109,16 @@ public class MainActivity extends AppCompatActivity {
         client.newCall(request).enqueue(new Callback() {
 
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(
+                    Call call,
+                    IOException e
+            ) {
 
                 runOnUiThread(() -> {
 
-                    loadingBar.setVisibility(View.GONE);
+                    if (loadingBar != null) {
+                        loadingBar.setVisibility(View.GONE);
+                    }
 
                     Toast.makeText(
                             MainActivity.this,
@@ -89,37 +129,45 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onResponse(Call call, Response response)
-                    throws IOException {
-
-                if (!response.isSuccessful()) {
-
-                    runOnUiThread(() -> {
-
-                        loadingBar.setVisibility(View.GONE);
-
-                        Toast.makeText(
-                                MainActivity.this,
-                                "خطأ من WooCommerce: " + response.code(),
-                                Toast.LENGTH_LONG
-                        ).show();
-                    });
-
-                    return;
-                }
-
-                String json = response.body() != null
-                        ? response.body().string()
-                        : "[]";
+            public void onResponse(
+                    Call call,
+                    Response response
+            ) throws IOException {
 
                 try {
+
+                    if (!response.isSuccessful()) {
+
+                        runOnUiThread(() -> {
+
+                            if (loadingBar != null) {
+                                loadingBar.setVisibility(View.GONE);
+                            }
+
+                            Toast.makeText(
+                                    MainActivity.this,
+                                    "خطأ من المتجر: "
+                                            + response.code(),
+                                    Toast.LENGTH_LONG
+                            ).show();
+                        });
+
+                        return;
+                    }
+
+                    String json =
+                            response.body() != null
+                                    ? response.body().string()
+                                    : "[]";
 
                     JSONArray products =
                             new JSONArray(json);
 
                     runOnUiThread(() -> {
 
-                        loadingBar.setVisibility(View.GONE);
+                        if (loadingBar != null) {
+                            loadingBar.setVisibility(View.GONE);
+                        }
 
                         displayProducts(products);
                     });
@@ -128,11 +176,13 @@ public class MainActivity extends AppCompatActivity {
 
                     runOnUiThread(() -> {
 
-                        loadingBar.setVisibility(View.GONE);
+                        if (loadingBar != null) {
+                            loadingBar.setVisibility(View.GONE);
+                        }
 
                         Toast.makeText(
                                 MainActivity.this,
-                                "حدث خطأ في قراءة المنتجات",
+                                "تعذر قراءة بيانات المنتجات",
                                 Toast.LENGTH_LONG
                         ).show();
                     });
@@ -160,13 +210,14 @@ public class MainActivity extends AppCompatActivity {
                     IOException e
             ) {
 
-                runOnUiThread(() ->
-                        Toast.makeText(
-                                MainActivity.this,
-                                "تعذر إنشاء جلسة السلة",
-                                Toast.LENGTH_LONG
-                        ).show()
-                );
+                runOnUiThread(() -> {
+
+                    Toast.makeText(
+                            MainActivity.this,
+                            "تعذر الاتصال بالسلة",
+                            Toast.LENGTH_SHORT
+                    ).show();
+                });
             }
 
             @Override
@@ -175,31 +226,19 @@ public class MainActivity extends AppCompatActivity {
                     Response response
             ) throws IOException {
 
-                String token =
-                        response.header("Cart-Token");
+                try {
 
-                if (token != null
-                        && !token.isEmpty()) {
+                    String token =
+                            response.header("Cart-Token");
 
-                    cartToken = token;
+                    if (token != null
+                            && !token.trim().isEmpty()) {
 
-                    runOnUiThread(() ->
-                            Toast.makeText(
-                                    MainActivity.this,
-                                    "السلة جاهزة ✓",
-                                    Toast.LENGTH_SHORT
-                            ).show()
-                    );
+                        cartToken = token;
 
-                } else {
+                    }
 
-                    runOnUiThread(() ->
-                            Toast.makeText(
-                                    MainActivity.this,
-                                    "لم يتم الحصول على Cart-Token",
-                                    Toast.LENGTH_LONG
-                            ).show()
-                    );
+                } catch (Exception ignored) {
                 }
             }
         });
@@ -209,9 +248,11 @@ public class MainActivity extends AppCompatActivity {
     // عرض المنتجات
     // =========================================================
 
-    private void displayProducts(
-            JSONArray products
-    ) {
+    private void displayProducts(JSONArray products) {
+
+        if (productsContainer == null) {
+            return;
+        }
 
         productsContainer.removeAllViews();
 
@@ -224,7 +265,7 @@ public class MainActivity extends AppCompatActivity {
                     "لا توجد منتجات حالياً"
             );
 
-            empty.setTextSize(17);
+            empty.setTextSize(18);
 
             empty.setGravity(
                     Gravity.CENTER
@@ -232,14 +273,12 @@ public class MainActivity extends AppCompatActivity {
 
             empty.setPadding(
                     20,
-                    40,
+                    50,
                     20,
-                    40
+                    50
             );
 
-            productsContainer.addView(
-                    empty
-            );
+            productsContainer.addView(empty);
 
             return;
         }
@@ -254,10 +293,7 @@ public class MainActivity extends AppCompatActivity {
                         products.getJSONObject(i);
 
                 int productId =
-                        product.optInt(
-                                "id",
-                                0
-                        );
+                        product.optInt("id", 0);
 
                 String name =
                         product.optString(
@@ -265,34 +301,8 @@ public class MainActivity extends AppCompatActivity {
                                 "منتج"
                         );
 
-                JSONObject prices =
-                        product.optJSONObject(
-                                "prices"
-                        );
-
-                String price = "";
-
-                if (prices != null) {
-
-                    String rawPrice =
-                            prices.optString(
-                                    "price",
-                                    ""
-                            );
-
-                    String symbol =
-                            prices.optString(
-                                    "currency_symbol",
-                                    ""
-                            );
-
-                    price =
-                            formatPrice(
-                                    rawPrice
-                            )
-                            + " "
-                            + symbol;
-                }
+                String price =
+                        getPrice(product);
 
                 boolean inStock =
                         product.optBoolean(
@@ -300,25 +310,8 @@ public class MainActivity extends AppCompatActivity {
                                 true
                         );
 
-                String imageUrl = "";
-
-                JSONArray images =
-                        product.optJSONArray(
-                                "images"
-                        );
-
-                if (images != null
-                        && images.length() > 0) {
-
-                    JSONObject image =
-                            images.getJSONObject(0);
-
-                    imageUrl =
-                            image.optString(
-                                    "src",
-                                    ""
-                            );
-                }
+                String imageUrl =
+                        getImage(product);
 
                 addProductCard(
                         productId,
@@ -330,6 +323,78 @@ public class MainActivity extends AppCompatActivity {
 
             } catch (Exception ignored) {
             }
+        }
+    }
+
+    // =========================================================
+    // السعر
+    // =========================================================
+
+    private String getPrice(JSONObject product) {
+
+        try {
+
+            JSONObject prices =
+                    product.optJSONObject("prices");
+
+            if (prices == null) {
+                return "";
+            }
+
+            String rawPrice =
+                    prices.optString(
+                            "price",
+                            ""
+                    );
+
+            String symbol =
+                    prices.optString(
+                            "currency_symbol",
+                            ""
+                    );
+
+            return formatPrice(rawPrice)
+                    + " "
+                    + symbol;
+
+        } catch (Exception e) {
+
+            return "";
+        }
+    }
+
+    // =========================================================
+    // صورة المنتج
+    // =========================================================
+
+    private String getImage(JSONObject product) {
+
+        try {
+
+            JSONArray images =
+                    product.optJSONArray("images");
+
+            if (images == null
+                    || images.length() == 0) {
+
+                return "";
+            }
+
+            JSONObject image =
+                    images.optJSONObject(0);
+
+            if (image == null) {
+                return "";
+            }
+
+            return image.optString(
+                    "src",
+                    ""
+            );
+
+        } catch (Exception e) {
+
+            return "";
         }
     }
 
@@ -353,14 +418,14 @@ public class MainActivity extends AppCompatActivity {
         );
 
         card.setPadding(
-                16,
-                16,
-                16,
-                16
+                20,
+                20,
+                20,
+                20
         );
 
         card.setBackgroundColor(
-                0xFFFFFFFF
+                Color.WHITE
         );
 
         LinearLayout.LayoutParams cardParams =
@@ -370,31 +435,30 @@ public class MainActivity extends AppCompatActivity {
                 );
 
         cardParams.setMargins(
-                0,
-                0,
-                0,
-                18
+                16,
+                10,
+                16,
+                10
         );
 
-        card.setLayoutParams(
-                cardParams
-        );
+        card.setLayoutParams(cardParams);
 
-        // =====================================================
-        // صورة المنتج
-        // =====================================================
+        // -----------------------------------------------------
+        // الصورة
+        // -----------------------------------------------------
 
-        ImageView productImage =
+        ImageView image =
                 new ImageView(this);
 
-        productImage.setLayoutParams(
+        LinearLayout.LayoutParams imageParams =
                 new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         220
-                )
-        );
+                );
 
-        productImage.setScaleType(
+        image.setLayoutParams(imageParams);
+
+        image.setScaleType(
                 ImageView.ScaleType.CENTER_CROP
         );
 
@@ -408,16 +472,14 @@ public class MainActivity extends AppCompatActivity {
                     .error(
                             android.R.drawable.ic_menu_gallery
                     )
-                    .into(productImage);
+                    .into(image);
         }
 
-        card.addView(
-                productImage
-        );
+        card.addView(image);
 
-        // =====================================================
-        // اسم المنتج
-        // =====================================================
+        // -----------------------------------------------------
+        // الاسم
+        // -----------------------------------------------------
 
         TextView nameText =
                 new TextView(this);
@@ -426,39 +488,27 @@ public class MainActivity extends AppCompatActivity {
 
         nameText.setTextSize(18);
 
+        nameText.setTextColor(
+                Color.rgb(23, 32, 23)
+        );
+
         nameText.setTypeface(
                 Typeface.DEFAULT,
                 Typeface.BOLD
         );
 
-        nameText.setTextColor(
-                0xFF172017
-        );
-
-        LinearLayout.LayoutParams nameParams =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
-
-        nameParams.setMargins(
+        nameText.setPadding(
                 0,
-                14,
+                15,
                 0,
-                0
+                5
         );
 
-        nameText.setLayoutParams(
-                nameParams
-        );
+        card.addView(nameText);
 
-        card.addView(
-                nameText
-        );
-
-        // =====================================================
+        // -----------------------------------------------------
         // السعر
-        // =====================================================
+        // -----------------------------------------------------
 
         TextView priceText =
                 new TextView(this);
@@ -467,39 +517,20 @@ public class MainActivity extends AppCompatActivity {
 
         priceText.setTextSize(17);
 
+        priceText.setTextColor(
+                Color.rgb(22, 163, 74)
+        );
+
         priceText.setTypeface(
                 Typeface.DEFAULT,
                 Typeface.BOLD
         );
 
-        priceText.setTextColor(
-                0xFF16A34A
-        );
+        card.addView(priceText);
 
-        LinearLayout.LayoutParams priceParams =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
-
-        priceParams.setMargins(
-                0,
-                8,
-                0,
-                8
-        );
-
-        priceText.setLayoutParams(
-                priceParams
-        );
-
-        card.addView(
-                priceText
-        );
-
-        // =====================================================
-        // حالة المخزون
-        // =====================================================
+        // -----------------------------------------------------
+        // المخزون
+        // -----------------------------------------------------
 
         TextView stockText =
                 new TextView(this);
@@ -511,7 +542,7 @@ public class MainActivity extends AppCompatActivity {
             );
 
             stockText.setTextColor(
-                    0xFF16A34A
+                    Color.rgb(22, 163, 74)
             );
 
         } else {
@@ -521,30 +552,33 @@ public class MainActivity extends AppCompatActivity {
             );
 
             stockText.setTextColor(
-                    0xFFCC0000
+                    Color.RED
             );
         }
 
-        card.addView(
-                stockText
+        stockText.setPadding(
+                0,
+                8,
+                0,
+                8
         );
 
-        // =====================================================
-        // زر إضافة إلى السلة
-        // =====================================================
+        card.addView(stockText);
 
-        Button cartButton =
+        // -----------------------------------------------------
+        // زر السلة
+        // -----------------------------------------------------
+
+        Button button =
                 new Button(this);
 
-        cartButton.setText(
+        button.setText(
                 "🛒 إضافة إلى السلة"
         );
 
-        cartButton.setEnabled(
-                inStock
-        );
+        button.setEnabled(inStock);
 
-        cartButton.setOnClickListener(
+        button.setOnClickListener(
                 v -> {
 
                     if (cartToken == null
@@ -563,51 +597,30 @@ public class MainActivity extends AppCompatActivity {
 
                     addToCart(
                             productId,
-                            cartButton
+                            button
                     );
                 }
         );
 
-        LinearLayout.LayoutParams buttonParams =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
+        card.addView(button);
 
-        buttonParams.setMargins(
-                0,
-                12,
-                0,
-                0
-        );
-
-        cartButton.setLayoutParams(
-                buttonParams
-        );
-
-        card.addView(
-                cartButton
-        );
-
-        productsContainer.addView(
-                card
-        );
+        productsContainer.addView(card);
     }
 
     // =========================================================
-    // إضافة المنتج إلى WooCommerce
+    // إضافة إلى السلة
     // =========================================================
 
     private void addToCart(
             int productId,
-            Button cartButton
+            Button button
     ) {
 
         if (cartToken == null
                 || cartToken.isEmpty()) {
 
             Toast.makeText(
-                    MainActivity.this,
+                    this,
                     "السلة غير جاهزة",
                     Toast.LENGTH_SHORT
             ).show();
@@ -615,61 +628,32 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        cartButton.setEnabled(false);
+        button.setEnabled(false);
 
-        cartButton.setText(
+        button.setText(
                 "جاري الإضافة..."
         );
 
-        HttpUrl url =
-                HttpUrl.parse(
-                        ADD_TO_CART_URL
+        String url =
+                ADD_TO_CART_URL
+                        + "?id="
+                        + productId
+                        + "&quantity=1";
+
+        okhttp3.RequestBody body =
+                okhttp3.RequestBody.create(
+                        new byte[0],
+                        null
                 );
-
-        if (url == null) {
-
-            cartButton.setEnabled(true);
-
-            cartButton.setText(
-                    "🛒 إضافة إلى السلة"
-            );
-
-            Toast.makeText(
-                    MainActivity.this,
-                    "رابط السلة غير صحيح",
-                    Toast.LENGTH_LONG
-            ).show();
-
-            return;
-        }
-
-        HttpUrl finalUrl =
-                url.newBuilder()
-                        .addQueryParameter(
-                                "id",
-                                String.valueOf(
-                                        productId
-                                )
-                        )
-                        .addQueryParameter(
-                                "quantity",
-                                "1"
-                        )
-                        .build();
 
         Request request =
                 new Request.Builder()
-                        .url(finalUrl)
+                        .url(url)
                         .header(
                                 "Cart-Token",
                                 cartToken
                         )
-                        .post(
-                                okhttp3.RequestBody.create(
-                                        null,
-                                        new byte[0]
-                                )
-                        )
+                        .post(body)
                         .build();
 
         client.newCall(request).enqueue(
@@ -683,11 +667,9 @@ public class MainActivity extends AppCompatActivity {
 
                         runOnUiThread(() -> {
 
-                            cartButton.setEnabled(
-                                    true
-                            );
+                            button.setEnabled(true);
 
-                            cartButton.setText(
+                            button.setText(
                                     "🛒 إضافة إلى السلة"
                             );
 
@@ -705,7 +687,7 @@ public class MainActivity extends AppCompatActivity {
                             Response response
                     ) throws IOException {
 
-                        String responseBody =
+                        String bodyText =
                                 response.body() != null
                                         ? response.body().string()
                                         : "";
@@ -714,41 +696,35 @@ public class MainActivity extends AppCompatActivity {
 
                             runOnUiThread(() -> {
 
-                                cartButton.setEnabled(
-                                        true
-                                );
+                                button.setEnabled(true);
 
-                                cartButton.setText(
-                                        "✓ تمت الإضافة للسلة"
+                                button.setText(
+                                        "✓ تمت الإضافة"
                                 );
 
                                 Toast.makeText(
                                         MainActivity.this,
-                                        "تمت إضافة المنتج إلى السلة ✓",
+                                        "تمت إضافة المنتج للسلة ✓",
                                         Toast.LENGTH_SHORT
                                 ).show();
                             });
 
                         } else {
 
-                            String errorMessage =
-                                    getWooCommerceError(
-                                            responseBody
-                                    );
+                            String error =
+                                    getWooError(bodyText);
 
                             runOnUiThread(() -> {
 
-                                cartButton.setEnabled(
-                                        true
-                                );
+                                button.setEnabled(true);
 
-                                cartButton.setText(
+                                button.setText(
                                         "🛒 إضافة إلى السلة"
                                 );
 
                                 Toast.makeText(
                                         MainActivity.this,
-                                        errorMessage,
+                                        error,
                                         Toast.LENGTH_LONG
                                 ).show();
                             });
@@ -759,20 +735,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // =========================================================
-    // قراءة خطأ WooCommerce
+    // خطأ WooCommerce
     // =========================================================
 
-    private String getWooCommerceError(
+    private String getWooError(
             String json
     ) {
 
         try {
 
-            JSONObject error =
+            JSONObject object =
                     new JSONObject(json);
 
             String message =
-                    error.optString(
+                    object.optString(
                             "message",
                             ""
                     );
@@ -782,12 +758,13 @@ public class MainActivity extends AppCompatActivity {
             }
 
             String code =
-                    error.optString(
+                    object.optString(
                             "code",
                             ""
                     );
 
             if (!code.isEmpty()) {
+
                 return "خطأ WooCommerce: "
                         + code;
             }
@@ -806,12 +783,16 @@ public class MainActivity extends AppCompatActivity {
             String value
     ) {
 
+        if (value == null
+                || value.trim().isEmpty()) {
+
+            return "";
+        }
+
         try {
 
             double number =
-                    Double.parseDouble(
-                            value
-                    );
+                    Double.parseDouble(value);
 
             if (number ==
                     Math.floor(number)) {
@@ -822,6 +803,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             return String.format(
+                    java.util.Locale.US,
                     "%.2f",
                     number
             );
@@ -831,4 +813,4 @@ public class MainActivity extends AppCompatActivity {
             return value;
         }
     }
-                                  }
+}
