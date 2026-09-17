@@ -30,11 +30,16 @@ public class MainActivity extends AppCompatActivity {
 
     private final OkHttpClient client = new OkHttpClient();
 
+    private String cartToken = null;
+
     private LinearLayout productsContainer;
     private ProgressBar loadingBar;
 
     private static final String PRODUCTS_URL =
             "https://master4store.com/wp-json/wc/store/v1/products?per_page=20";
+
+    private static final String CART_URL =
+            "https://master4store.com/wp-json/wc/store/v1/cart";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
         loadingBar = findViewById(R.id.loadingBar);
 
         loadProducts();
+        getCartToken();
     }
 
     private void loadProducts() {
@@ -126,6 +132,59 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void getCartToken() {
+
+        Request request = new Request.Builder()
+                .url(CART_URL)
+                .get()
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+
+                runOnUiThread(() ->
+                        Toast.makeText(
+                                MainActivity.this,
+                                "تعذر إنشاء جلسة السلة",
+                                Toast.LENGTH_LONG
+                        ).show()
+                );
+            }
+
+            @Override
+            public void onResponse(Call call, Response response)
+                    throws IOException {
+
+                String token = response.header("Cart-Token");
+
+                if (token != null && !token.isEmpty()) {
+
+                    cartToken = token;
+
+                    runOnUiThread(() ->
+                            Toast.makeText(
+                                    MainActivity.this,
+                                    "السلة جاهزة ✓",
+                                    Toast.LENGTH_SHORT
+                            ).show()
+                    );
+
+                } else {
+
+                    runOnUiThread(() ->
+                            Toast.makeText(
+                                    MainActivity.this,
+                                    "لم يتم الحصول على Cart-Token",
+                                    Toast.LENGTH_LONG
+                            ).show()
+                    );
+                }
+            }
+        });
+    }
+
     private void displayProducts(JSONArray products) {
 
         productsContainer.removeAllViews();
@@ -150,6 +209,9 @@ public class MainActivity extends AppCompatActivity {
 
                 JSONObject product =
                         products.getJSONObject(i);
+
+                int productId =
+                        product.optInt("id", 0);
 
                 String name =
                         product.optString(
@@ -207,6 +269,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 addProductCard(
+                        productId,
                         name,
                         price,
                         imageUrl,
@@ -219,6 +282,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void addProductCard(
+            int productId,
             String name,
             String price,
             String imageUrl,
