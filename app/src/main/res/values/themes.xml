@@ -10,7 +10,7 @@
 
         <item name="android:windowLightStatusBar">true</item>
 
-        <item name="android:statusBarColor">#FFFFFF</item>
+        <item name="android:statusBarColor">#16A34A</item>
 
         <item name="android:navigationBarColor">#FFFFFF</item>
 
